@@ -38,11 +38,12 @@
           \-- SprocketPlugin.vb     主程序副本（保持与 startup 一致）
 
   【必须】startup\ 与 application\ 两个目录整体复制。
-  【不必】根目录下所有 .cs 文件、SprocketPlugin.csproj、
-          dbc_udf_ascii.def、udf_database.txt、README.md、
-          custom_dirs_README.txt
-          —— 这些是早期 C# 版本的残留，与现在的 .vb 版无关，
-             复制过去也不会被 NX 加载。
+  【建议】README.md（功能与参数说明）、部署说明.txt（本文件）
+  【可选】启动NX链轮插件.bat、推送到GitHub.bat、导出插件包.bat
+
+  注：早期 C# 版本遗留的文件（*.cs、SprocketPlugin.csproj、
+      dbc_udf_ascii.def、udf_database.txt、custom_dirs_README.txt）
+      已从目录中清理，不需要再关心。
 
   提示：其实把整个文件夹原样拷过去也能用（多余文件不影响 NX），
         用「导出插件包.bat」只是为了得到一个干净的拷贝。
@@ -130,6 +131,75 @@ NX 启动时会在 $UGII_USER_DIR\startup\ 和 $UGII_USER_DIR\application\
   3. 关闭并重启 NX 生效
 
   .vb 与 .dlx 必须成对更新，不要只换其中一个。
+
+
+七、把插件上传到 GitHub（可选）
+----------------------------------------------------------------
+本插件目录已经是一个 git 仓库（分支 main），首次提交里已包含全部
+源文件，所以本地这一步不用再做了，直接看下面三步。
+
+■ 第 1 步：在 GitHub 网页上新建一个空仓库
+   - 打开 https://github.com/new
+   - Repository name 填仓库名。中文名 GitHub 也接受，但克隆地址会
+     变成一长串 %XX 转义，建议用 ASCII 名，例如 NX-Sprocket-Plugin
+   - 三个初始化选项（Add a README file / .gitignore / license）
+     一个都不要勾 —— 勾了远端就会先有提交，首次推送会报 rejected
+   - 建好后复制仓库地址，形如：
+       https://github.com/<你的用户名>/NX-Sprocket-Plugin.git
+
+■ 第 2 步：让本地仓库指向它，推送一次
+   在本插件目录打开 Git Bash（或命令行），执行：
+
+       git remote add origin https://github.com/<你的用户名>/NX-Sprocket-Plugin.git
+       git push -u origin main
+
+   首次会要求登录 GitHub。GitHub 早已不支持账号密码，
+   密码处要填 Personal Access Token（个人访问令牌）：
+       https://github.com/settings/tokens
+       → Generate new token (classic) → 勾选 repo → 生成
+       → 复制那串字符，粘贴到密码提示处
+   Windows 会把它记进「凭据管理器」，以后不用再输。
+
+■ 第 3 步：以后每次更新
+   双击「推送到GitHub.bat」，它会自动 add + commit + push。
+   也可以手动执行：
+       git add -A
+       git commit -m "说明这次改了什么"
+       git push
+
+仓库约定（已配好，一般不用动）：
+  - .gitignore     忽略 *.zip 与 _portable\（打包产物不进仓库）
+  - .gitattributes 关闭换行符转换，保证 .bat/.dlx/.vb 字节原样
+                   —— .bat 若被改成 LF，在 Windows 上会执行异常
+  - 不要往仓库里放 NX 安装包、许可证文件等大文件
+
+常见问题：
+  1. push 报 "rejected / fetch first"
+     远端仓库不是空的（建库时勾了 README）。执行下面任一方式：
+       git pull --rebase origin main      然后再 push
+       git push -u origin main --force    用本地覆盖远端
+
+  2. push 报 CRYPT_E_NO_REVOCATION_CHECK 或
+     "unable to get local issuer certificate"（证书类错误）
+     这是本机在用 Watt Toolkit（原 Steam++）之类工具加速 GitHub，
+     它用自签根证书做了 TLS 中间人，git 不认这张证书。
+     正规修法：把它的根证书并入 git 的 CA 包。
+     本机已完成，记录在此备查：
+       C:\Users\<你>\.git-certs\git-ca-bundle.pem
+       git config --global http.sslBackend openssl
+       git config --global http.sslCAInfo C:\Users\<你>\.git-certs\git-ca-bundle.pem
+     注意：该根证书有有效期（约 1 年）。若某天又开始报证书错误，
+     在 Watt Toolkit 里重新安装证书后，照上面重建 CA 包即可。
+
+  3. 确认远端与本地是同一版本
+       git log --oneline -1          本地最新提交
+       git ls-remote origin HEAD     远端最新提交
+     两个哈希一致即同步完成。
+
+其它用途：
+  - 同步到另一台电脑：直接 git clone 仓库地址，比拷目录更省事
+  - 只想发布可下载的压缩包：先用「导出插件包.bat」生成 _portable\，
+    再到仓库页面的 Releases 里上传，比塞进仓库更合适
 
 
 ================================================================
