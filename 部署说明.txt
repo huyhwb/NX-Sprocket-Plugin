@@ -222,6 +222,19 @@ NX 启动时会在 $UGII_USER_DIR\startup\ 和 $UGII_USER_DIR\application\
        git ls-remote origin HEAD     远端最新提交
      两个哈希一致即同步完成。
 
+  4. push 卡住不动（很久没有任何输出，也不报错）
+     原因：git 在向"凭据助手"要账号密码，而助手没能把登录窗口弹出来
+     （在后台/脚本里调用时容易这样；双击 .bat 手动运行一般没问题）。
+     排查：另开一个窗口执行下面这条，列出 git 正在用哪些凭据助手：
+       git config --show-origin --get-all credential.helper
+     若列出了两个且第一个不是 git-credential-manager，可以在本次操作里
+     临时跳过它、只用 Git Credential Manager（把路径换成实际的）：
+       git -c credential.helper= ^
+           -c credential.helper="<Git安装目录>\mingw64\bin\git-credential-manager.exe" ^
+           push origin main
+     想一劳永逸：把 user 级的凭据助手设为后者，或删掉前面的那个。
+     （本机此前就是 helper-selector 排在前面导致卡住。）
+
 其它用途：
   - 同步到另一台电脑：直接 git clone 仓库地址，比拷目录更省事
   - 只想发布可下载的压缩包：先用「导出插件包.bat」生成 _portable\，
