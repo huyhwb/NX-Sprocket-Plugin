@@ -1,3 +1,6 @@
+# NX-Sprocket-Plugin
+用AI写的NX链轮插件，目前仅在WIN10+NX12环境下测试可用
+
 # NX 12.0 链轮生成插件
 
 Siemens NX 12.0 的参数化链轮生成插件。用 NX 自带对话框（Block UI Styler）输入参数，
