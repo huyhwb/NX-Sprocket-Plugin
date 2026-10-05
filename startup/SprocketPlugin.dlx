@@ -1065,10 +1065,10 @@
        </PropertyList>
       </item>
      </Property>
-     <Property id="dbChamD" mask="256" name="dbChamD" type="uicomp" class="UICOMP_double" hierarchy="UGS::UICOMP_group" presentation="Double">
-      <item id="dbChamD" icon="styler_real" name="dbChamD" type="uicomp" class="UICOMP_double" notes="" Expanded="1" hierarchy="UICOMP_toggle" presentation="Double">
+     <Property id="dbChamAx" mask="256" name="dbChamAx" type="uicomp" class="UICOMP_double" hierarchy="UGS::UICOMP_group" presentation="Double">
+      <item id="dbChamAx" icon="styler_real" name="dbChamAx" type="uicomp" class="UICOMP_double" notes="" Expanded="1" hierarchy="UICOMP_toggle" presentation="Double">
        <PropertyList id="id" mode="0">
-        <Property id="API Name" mask="16656" name="API Name" type="string" group="General::" sname="BlockID" value="dbChamD" source="3" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
+        <Property id="API Name" mask="16656" name="API Name" type="string" group="General::" sname="BlockID" value="dbChamAx" source="3" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
         <Property id="Group" mask="16384" name="Group" type="logical" group="General::" sname="Group" value="False" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
         <Property id="Expanded" mask="4" name="Expanded" type="logical" group="General::" sname="Expanded" value="True" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
         <Property id="HideGroup" mask="69636" name="HideGroup" type="logical" group="General::" sname="HideGroup" value="False" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
@@ -1105,10 +1105,67 @@
         <Property id="Right" loc="3" mask="16384" name="Right" type="attachment" group="Other::Attachments::" sname="Right" offset="0" source="3" target="Default" ClassID="UGS::UIFW_dialog_layout" hierarchy="UGS::UIFW_dialog_layout"/>
         <Property id="Bottom" loc="4" mask="16384" name="Bottom" type="attachment" group="Other::Attachments::" sname="Bottom" offset="0" source="3" target="Default" ClassID="UGS::UIFW_dialog_layout" hierarchy="UGS::UIFW_dialog_layout"/>
         <Property id="MinimumValue" mask="256" name="MinimumValue" type="double" group="Block Specific::" sname="MinimumValue" value="0.05" source="1" ClassID="UGS::UICOMP_double" hierarchy="UGS::UICOMP_double"/>
-        <Property id="MaximumValue" mask="256" name="MaximumValue" type="double" group="Block Specific::" sname="MaximumValue" value="20.0" source="1" ClassID="UGS::UICOMP_double" hierarchy="UGS::UICOMP_double"/>
-        <Property id="Title" mask="256" name="Title" type="utfstring" group="General::" sname="Label" value="倒角宽度 (mm)" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
+        <Property id="MaximumValue" mask="256" name="MaximumValue" type="double" group="Block Specific::" sname="MaximumValue" value="100.0" source="1" ClassID="UGS::UICOMP_double" hierarchy="UGS::UICOMP_double"/>
+        <Property id="Title" mask="256" name="Title" type="utfstring" group="General::" sname="Label" value="轴向长度 (mm)" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
         <Property id="Visibility" mask="256" name="Visibility" type="logical" group="General::" sname="Show" value="True" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
         <Property id="Value" mask="256" name="Value" type="double" group="Block Specific::" sname="Value" value="1.0" source="4" ClassID="UGS::UICOMP_double" hierarchy="UGS::UICOMP_double"/>
+        <Property id="Sensitivity" mask="256" name="Sensitivity" type="logical" group="General::" sname="Enable" value="True" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
+        <Property id="UserLockable" mask="69632" name="UserLockable" type="logical" group="Block Specific::" sname="UserLockable" value="False" source="1" ClassID="UGS::UICOMP_value" hierarchy="UGS::UICOMP_double"/>
+        <Property id="UserLocked" mask="69634" name="UserLocked" type="logical" group="Block Specific::" sname="UserLocked" value="False" source="2" ClassID="UGS::UICOMP_value" hierarchy="UGS::UICOMP_double"/>
+        <Property id="BalloonTooltipText" mask="0" name="BalloonTooltipText" type="utfstring" group="Block Specific::" sname="BalloonTooltipText" value="" source="1" ClassID="UGS::UICOMP_double" hierarchy="UGS::UICOMP_double"/>
+        <Property id="BalloonTooltipImage" mask="0" name="BalloonTooltipImage" type="string" group="Block Specific::" sname="BalloonTooltipImage" value="" source="1" ClassID="UGS::UICOMP_double" hierarchy="UGS::UICOMP_double"/>
+        <Property id="BalloonTooltipLayout" mask="0" name="BalloonTooltipLayout" type="enum" brief="0" group="Block Specific::" sname="BalloonTooltipLayout" source="1" ClassID="UGS::UICOMP_double" dynamic="0" selected="0" hierarchy="UGS::UICOMP_double">
+         <Option name="Horizontal" value="0"/>
+         <Option name="Vertical" value="1"/>
+        </Property>
+        <Property id="ComboOptions" data="" mask="4" name="ComboOptions" size="0" type="stlvector" dtype="1" group="Block Specific::" sname="ComboOptions" source="1" ClassID="UGS::UICOMP_double" hierarchy="UGS::UICOMP_double"/>
+       </PropertyList>
+      </item>
+     </Property>
+     <Property id="dbChamFc" mask="256" name="dbChamFc" type="uicomp" class="UICOMP_double" hierarchy="UGS::UICOMP_group" presentation="Double">
+      <item id="dbChamFc" icon="styler_real" name="dbChamFc" type="uicomp" class="UICOMP_double" notes="" Expanded="1" hierarchy="UICOMP_toggle" presentation="Double">
+       <PropertyList id="id" mode="0">
+        <Property id="API Name" mask="16656" name="API Name" type="string" group="General::" sname="BlockID" value="dbChamFc" source="3" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
+        <Property id="Group" mask="16384" name="Group" type="logical" group="General::" sname="Group" value="False" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
+        <Property id="Expanded" mask="4" name="Expanded" type="logical" group="General::" sname="Expanded" value="True" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
+        <Property id="HideGroup" mask="69636" name="HideGroup" type="logical" group="General::" sname="HideGroup" value="False" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
+        <Property id="Focus" mask="69636" name="Focus" type="logical" group="General::" sname="Focus" value="False" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
+        <Property id="CanFocus" mask="69636" name="CanFocus" type="logical" group="General::" sname="CanFocus" value="False" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
+        <Property id="KeyboardFocus" mask="69636" name="KeyboardFocus" type="logical" group="General::" sname="KeyboardFocus" value="False" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
+        <Property id="CanKeyboardFocus" mask="69636" name="CanKeyboardFocus" type="logical" group="General::" sname="CanKeyboardFocus" value="True" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
+        <Property id="ReadWrite" mask="0" name="ReadWrite" type="logical" group="Other::" sname="RetainValue" value="True" source="1" ClassID="UGS::UICOMP_widget" hierarchy="UGS::UICOMP_double"/>
+        <Property id="UIOnly" mask="69636" name="UIOnly" type="logical" group="Other::" sname="RetainValueInUIOnly" value="False" source="1" ClassID="UGS::UICOMP_widget" hierarchy="UGS::UICOMP_double"/>
+        <Property id="Translated" mask="16384" name="Translated" type="logical" group="Other::" sname="Localize" value="True" source="1" ClassID="UGS::UICOMP_widget" hierarchy="UGS::UICOMP_double"/>
+        <Property id="TitleVisibility" mask="0" name="TitleVisibility" type="logical" group="Block Specific::" sname="TitleVisibility" value="True" source="1" ClassID="UGS::UICOMP_value" hierarchy="UGS::UICOMP_double"/>
+        <Property id="Icon" mask="128" name="Icon" type="string" group="Block Specific::" sname="Bitmap" value="" source="1" ClassID="UGS::UICOMP_value" hierarchy="UGS::UICOMP_double"/>
+        <Property id="PresentationStyle" mask="16384" name="PresentationStyle" type="enum" brief="0" group="Block Specific::" sname="PresentationStyle" source="1" ClassID="UGS::UICOMP_value" dynamic="0" selected="0" hierarchy="UGS::UICOMP_double">
+         <Option name="Keyin" value="0"/>
+         <Option name="Spin" value="1"/>
+         <Option name="Scale" value="2"/>
+         <Option name="ScaleKeyin" value="3"/>
+         <Option name="Combo" value="4"/>
+        </Property>
+        <Property id="PageIncrement" mask="4" name="PageIncrement" type="double" group="Block Specific::" sname="PageIncrement" value="1e+019" source="1" ClassID="UGS::UICOMP_value" hierarchy="UGS::UIFW_scale_options"/>
+        <Property id="LineIncrement" mask="4" name="LineIncrement" type="double" group="Block Specific::" sname="LineIncrement" value="1e+019" source="1" ClassID="UGS::UICOMP_value" hierarchy="UGS::UIFW_scale_options"/>
+        <Property id="ValueVisibility" mask="4" name="ValueVisibility" type="logical" group="Block Specific::" sname="ShowScaleValue" value="True" source="1" ClassID="UGS::UICOMP_value" hierarchy="UGS::UIFW_scale_options"/>
+        <Property id="LimitsVisibility" mask="4" name="LimitsVisibility" type="logical" group="Block Specific::" sname="ScaleLimits" value="True" source="1" ClassID="UGS::UICOMP_value" hierarchy="UGS::UIFW_scale_options"/>
+        <Property id="MinTitle" mask="4" name="MinTitle" type="string" group="Block Specific::" sname="ScaleMinLimitLabel" value="" source="1" ClassID="UGS::UICOMP_value" hierarchy="UGS::UIFW_scale_options"/>
+        <Property id="MaxTitle" mask="4" name="MaxTitle" type="string" group="Block Specific::" sname="ScaleMaxLimitLabel" value="" source="1" ClassID="UGS::UICOMP_value" hierarchy="UGS::UIFW_scale_options"/>
+        <Property id="AdaptiveLimits" mask="4" name="AdaptiveLimits" type="logical" group="Block Specific::" sname="AdaptiveScaleLimits" value="False" source="1" ClassID="UGS::UICOMP_value" hierarchy="UGS::UIFW_scale_options"/>
+        <Property id="Increment" mask="4" name="Increment" type="double" group="Block Specific::" sname="Increment" value="1" source="1" ClassID="UGS::UIFW_spin_options" hierarchy="UGS::UIFW_spin_options"/>
+        <Property id="WrapSpin" mask="4" name="WrapSpin" type="logical" group="Block Specific::" sname="WrapSpin" value="False" source="1" ClassID="UGS::UIFW_spin_options" hierarchy="UGS::UIFW_spin_options"/>
+        <Property id="MinInclusive" mask="0" name="MinInclusive" type="logical" group="Block Specific::" sname="MinInclusive" value="True" source="1" ClassID="UGS::UICOMP_value" hierarchy="UGS::UICOMP_double"/>
+        <Property id="MaxInclusive" mask="0" name="MaxInclusive" type="logical" group="Block Specific::" sname="MaxInclusive" value="True" source="1" ClassID="UGS::UICOMP_value" hierarchy="UGS::UICOMP_double"/>
+        <Property id="VisibleDecimals" mask="69632" name="VisibleDecimals" type="integer" group="Block Specific::" sname="VisibleDecimals" value="2" source="1" ClassID="UGS::UICOMP_double" hierarchy="UGS::UICOMP_double"/>
+        <Property id="Top" loc="1" mask="16384" name="Top" type="attachment" group="Other::Attachments::" sname="Top" offset="0" source="3" target="Default" ClassID="UGS::UIFW_dialog_layout" hierarchy="UGS::UIFW_dialog_layout"/>
+        <Property id="Left" loc="2" mask="16384" name="Left" type="attachment" group="Other::Attachments::" sname="Left" offset="0" source="3" target="Default" ClassID="UGS::UIFW_dialog_layout" hierarchy="UGS::UIFW_dialog_layout"/>
+        <Property id="Right" loc="3" mask="16384" name="Right" type="attachment" group="Other::Attachments::" sname="Right" offset="0" source="3" target="Default" ClassID="UGS::UIFW_dialog_layout" hierarchy="UGS::UIFW_dialog_layout"/>
+        <Property id="Bottom" loc="4" mask="16384" name="Bottom" type="attachment" group="Other::Attachments::" sname="Bottom" offset="0" source="3" target="Default" ClassID="UGS::UIFW_dialog_layout" hierarchy="UGS::UIFW_dialog_layout"/>
+        <Property id="MinimumValue" mask="256" name="MinimumValue" type="double" group="Block Specific::" sname="MinimumValue" value="0.05" source="1" ClassID="UGS::UICOMP_double" hierarchy="UGS::UICOMP_double"/>
+        <Property id="MaximumValue" mask="256" name="MaximumValue" type="double" group="Block Specific::" sname="MaximumValue" value="500.0" source="1" ClassID="UGS::UICOMP_double" hierarchy="UGS::UICOMP_double"/>
+        <Property id="Title" mask="256" name="Title" type="utfstring" group="General::" sname="Label" value="端面长度 (mm)" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
+        <Property id="Visibility" mask="256" name="Visibility" type="logical" group="General::" sname="Show" value="True" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
+        <Property id="Value" mask="256" name="Value" type="double" group="Block Specific::" sname="Value" value="5.0" source="4" ClassID="UGS::UICOMP_double" hierarchy="UGS::UICOMP_double"/>
         <Property id="Sensitivity" mask="256" name="Sensitivity" type="logical" group="General::" sname="Enable" value="True" source="1" ClassID="UGS::UICOMP" hierarchy="UGS::UICOMP_double"/>
         <Property id="UserLockable" mask="69632" name="UserLockable" type="logical" group="Block Specific::" sname="UserLockable" value="False" source="1" ClassID="UGS::UICOMP_value" hierarchy="UGS::UICOMP_double"/>
         <Property id="UserLocked" mask="69634" name="UserLocked" type="logical" group="Block Specific::" sname="UserLocked" value="False" source="2" ClassID="UGS::UICOMP_value" hierarchy="UGS::UICOMP_double"/>

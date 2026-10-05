@@ -1,3 +1,29 @@
+' NX 12.0 链轮插件 - v23（倒角改为非对称"两侧倒角"：轴向 + 端面，默认 1x5）
+' v23 变更（按需求：原"外缘倒角"是对称 C 角，只有一个宽度；改为两侧分别输入）：
+'   [界面] dlx 组6「倒角」由 1 个 double 改为 2 个：
+'            dbChamAx  轴向长度 (mm)  默认 1.0   范围 0.05~100
+'            dbChamFc  端面长度 (mm)  默认 5.0   范围 0.05~500
+'          tgCham「外缘倒角」保留。apply_cb 侧加了两个下限校验（<0.05 报错）。
+'   [API]  NX12 的非对称倒角 = ChamferBuilder：
+'            Option = ChamferOption.TwoOffsets        （"两个偏置"，不等距）
+'            Method = OffsetMethod.EdgesAlongFaces    （常规倒角）
+'            FirstOffset / SecondOffset 是**字符串**（表达式）
+'         依据官方样例 UGOPEN/SampleNXOpenApplications/.NET/BlockStyler/
+'         SelectionExample/SelectionExample.vb 的 addChamfer()（第 514-556 行）：
+'         走 SmartCollector(ScCollector) + ScRuleFactory.CreateRuleEdgeDumb(Edge[])
+'         直接喂边数组，不需要交互拾取；Tolerance = 0.0254 亦照抄该样例。
+'   [选边] 只倒"外缘齿廓"（上下两端面上那一圈轮廓边，约 2x100 条）：
+'            ① 两端点 z 相同        → 排除沿 Z 的竖直棱边（弧段分界棱/侧面竖棱）
+'            ② 两端点半径 > 齿根半径 → 排除中心孔/螺丝孔/沉孔的内圈边
+'          齿根半径由 DoGenerate 从轮廓点集算 minR 传进来。
+'   [容错] 倒角是最后一步：失败**不回退整个零件**（主体已经做出来了），
+'          只把原因记进 gChamInfo，生成成功后用 Information 框提示；
+'          报错框也会带上倒角信息（若在以后某步失败时一并显示）。
+'   [注意] 偏置1/偏置2 与"轴向/端面"的对应由 NX 依边两侧相邻面的内部顺序决定，
+'          代码按 偏置1=轴向、偏置2=端面 设置。若实测两侧数值对调，
+'          只需把 cb.ReverseOffsets 改成 True（一行）。
+'
+' ---- 以下为 v22 说明 ----
 ' NX 12.0 链轮插件 - v22（打通布尔减：实体获取兜底 + 推荐布尔 API）
 ' v22 变更（v21 实测：主体拉伸已成功，卡在中心孔减料"找不到目标实体"）：
 '   [实测进展] v21 报错框：阶段=4/6 中心孔拉伸减料 d=20，
@@ -252,6 +278,9 @@ Module SprocketPlugin
     ' v22：每次拉伸提交后记录"实体获取"过程（部分实体的特征必须能拿到 Body，
     '      否则后续布尔减报"找不到目标实体"）。一并进报错框。
     Friend gBodyInfo As String = ""
+    ' v23：倒角阶段的结果/失败原因。**倒角失败不再中断整个生成**（零件已经做出来了），
+    '      只把原因记在这里，生成成功后用信息框提示。
+    Friend gChamInfo As String = ""
     Sub InitData()
         CHAIN_N(0) = "05B"   : CHAIN_P(0) = 8.0     : CHAIN_R(0) = 5.0
         CHAIN_N(1) = "06B"   : CHAIN_P(1) = 9.525   : CHAIN_R(1) = 6.35
@@ -324,7 +353,8 @@ Module SprocketPlugin
     '  主入口：计算 → 创建轮廓线 → 拉伸实体 → 打孔 → 倒角
     '  v18：新增 cP/cR（自定义节距/滚子直径，<=0 表示按 chainType 查标准表）
     ' ================================================================
-    Sub DoGenerate(ByVal teeth As Integer, ByVal chainType As String, ByVal cP As Double, ByVal cR As Double, ByVal thickness As Double, ByVal centerDia As Double, ByVal bCount As Integer, ByVal bDia As Double, ByVal bCircle As Double, ByVal doChamfer As Boolean, ByVal cMethod As Integer, ByVal cD1 As Double, ByVal cD2 As Double, ByVal cAng As Double, ByVal cskMode As Integer, ByVal cskDia As Double, ByVal cskDeep As Double, ByVal cskAngle As Double, ByVal outerDia As Double)
+    ' v23：倒角参数由 cMethod/cD1/cD2/cAng 改为两个长度——轴向 chamAx 与端面 chamFc
+    Sub DoGenerate(ByVal teeth As Integer, ByVal chainType As String, ByVal cP As Double, ByVal cR As Double, ByVal thickness As Double, ByVal centerDia As Double, ByVal bCount As Integer, ByVal bDia As Double, ByVal bCircle As Double, ByVal doChamfer As Boolean, ByVal chamAx As Double, ByVal chamFc As Double, ByVal cskMode As Integer, ByVal cskDia As Double, ByVal cskDeep As Double, ByVal cskAngle As Double, ByVal outerDia As Double)
         Dim wp As Part = theSession.Parts.Work
         Dim markId As Session.UndoMarkId
         markId = theSession.SetUndoMark(Session.MarkVisibility.Visible, "GenSprocket")
@@ -337,6 +367,7 @@ Module SprocketPlugin
             gSecInfo = ""
             gArcInfo = ""
             gBodyInfo = ""
+            gChamInfo = ""
             gMainBody = Nothing
 
             gStage = "1/6 查表取节距/滚子"
@@ -350,7 +381,18 @@ Module SprocketPlugin
             End If
             gStage = "2/6 计算轮廓点集 CalcArcs(齿数=" & teeth.ToString() & ", p=" & pStd.ToString("F3") & ", d1=" & rStd.ToString("F3") & ")"
             Dim pts() As Point3d = CalcArcs(teeth, pStd, rStd, outerDia)
-            gStage = "3/6 建轮廓弧并拉伸主体（" & (pts.Length \ 6).ToString() & " 段弧）"
+            ' v23：轮廓最小半径（≈齿根圆半径）。倒角选边时用它排除中心孔/螺丝孔/沉孔
+            ' 那一圈"内圈"边——孔的半径必然小于齿根圆半径。
+            Dim minR As Double = 1.0E+30
+            Dim qi As Integer
+            Dim qr As Double
+            For qi = 0 To pts.Length - 1
+                qr = Sqrt(pts(qi).X * pts(qi).X + pts(qi).Y * pts(qi).Y)
+                If qr < minR Then
+                    minR = qr
+                End If
+            Next qi
+            gStage = "3/6 建轮廓弧并拉伸主体（" & (pts.Length \ 6).ToString() & " 段弧，齿根半径 " & minR.ToString("F3") & "）"
             MakeSprocketBody(wp, pts, thickness)
             If centerDia > 0.001 Then
                 gStage = "4/6 中心孔拉伸减料 d=" & centerDia.ToString("F3")
@@ -373,8 +415,9 @@ Module SprocketPlugin
                 Next bi
             End If
             If doChamfer Then
-                gStage = "6/6 倒角"
-                DoSimpleChamfer(wp, cMethod, cD1, cD2, cAng)
+                ' v23：非对称两侧倒角——轴向长度 chamAx + 端面长度 chamFc（默认 1x5）
+                gStage = "6/6 倒角（轴向 " & chamAx.ToString("F3") & " / 端面 " & chamFc.ToString("F3") & "）"
+                DoSimpleChamfer(wp, minR, chamAx, chamFc)
             End If
             gStage = "完成"
         Catch ex As Exception
@@ -937,31 +980,143 @@ Module SprocketPlugin
 
 
     ' ================================================================
-    '  简单倒角
-    '  ChamferBuilder 的偏移值通过 .RightHandSide 字符串属性设置（不是 SetValue）
+    '  外缘倒角（v23：非对称"两侧"倒角）
+    '   一侧沿**轴向**（Z，即板厚方向），另一侧在**端面内**（径向/平面内），
+    '   两个长度分别来自对话框 dbChamAx / dbChamFc，默认 1 x 5。
+    '
+    '  NX12 API 依据（对照官方样例
+    '  UGOPEN/SampleNXOpenApplications/.NET/BlockStyler/SelectionExample/
+    '  SelectionExample.vb 的 addChamfer()，第 514-556 行）：
+    '    Option = ChamferOption.TwoOffsets        ← "两个偏置"（不等距倒角）
+    '    Method = OffsetMethod.EdgesAlongFaces    ← 常规倒角（沿相邻面偏置）
+    '    FirstOffset / SecondOffset 是**字符串**（表达式）
+    '    SmartCollector 是 ScCollector：
+    '        workPart.ScCollectors.CreateCollector()
+    '        → ReplaceRules(规则, False) → builder.SmartCollector = 收集器
+    '    Tolerance 官方样例给 0.0254
+    '  选边用 ScRuleFactory.CreateRuleEdgeDumb(Edge[])：直接把边数组喂进去，
+    '  不需要交互拾取。
+    '
+    '  选边范围 = **外缘齿廓**（上下两个端面上那一圈轮廓边），判据两条：
+    '    ① 边的两个端点 z 相同（|z1-z2| < tol）→ 排除沿 Z 的竖直棱边
+    '       （相邻两段弧之间的分界棱、拉伸侧面的竖棱）
+    '    ② 两端点半径都 > minR - 0.5 → 排除中心孔/螺丝孔/沉孔的内圈边
+    '
+    '  ⚠ 偏置1/偏置2 与"轴向/端面"的对应关系由 NX 依该边两个相邻面的内部
+    '    顺序决定。这里按 偏置1=轴向、偏置2=端面 设置。若实测发现两侧数值
+    '    对调，把 cb.ReverseOffsets 改成 True（或把两个值互换）即可。
+    '
+    '  失败处理：倒角是最后一步，失败**不回退整个零件**，只把原因记进
+    '  gChamInfo，由 apply_cb 在生成成功后用信息框提示。
     ' ================================================================
-    Sub DoSimpleChamfer(ByVal wp As Part, ByVal method As Integer, ByVal d1 As Double, ByVal d2 As Double, ByVal ang As Double)
-        Dim nullFeat As Feature = Nothing
-        Dim cb As ChamferBuilder = wp.Features.CreateChamferBuilder(nullFeat)
-        If cb Is Nothing Then
-            Exit Sub
+    Sub DoSimpleChamfer(ByVal wp As Part, ByVal minR As Double, ByVal axial As Double, ByVal face As Double)
+        gChamInfo = ""
+        Dim body As Body = gMainBody
+        If body Is Nothing Then
+            gChamInfo = "倒角：主实体引用为空（gMainBody = Nothing），已跳过倒角。"
+            Return
         End If
-        Try
-            If method = 0 Then
-                cb.FirstOffset = d1.ToString("F4")
-                cb.SecondOffset = d1.ToString("F4")
-            Else
-                cb.FirstOffset = d1.ToString("F4")
-                cb.SecondOffset = d2.ToString("F4")
+        If Not body.IsSolidBody Then
+            gChamInfo = "倒角：主实体不是实体（IsSolidBody = False），已跳过倒角。"
+            Return
+        End If
+
+        ' ---- 1) 挑出外缘齿廓边（两遍：先数再装，避免动态数组）----
+        Dim allEdges() As Edge = body.GetEdges()
+        Dim cnt As Integer = 0
+        Dim ei As Integer
+        For ei = 0 To allEdges.Length - 1
+            If IsChamferEdge(allEdges(ei), minR) Then
+                cnt = cnt + 1
             End If
+        Next ei
+        If cnt = 0 Then
+            gChamInfo = "倒角：未找到可倒角的外缘齿廓边（实体边总数 " & _
+                        allEdges.Length.ToString() & "，齿根半径 " & minR.ToString("F3") & _
+                        "），已跳过倒角。"
+            Return
+        End If
+        Dim edges(cnt - 1) As Edge
+        Dim k As Integer = 0
+        For ei = 0 To allEdges.Length - 1
+            If IsChamferEdge(allEdges(ei), minR) Then
+                edges(k) = allEdges(ei)
+                k = k + 1
+            End If
+        Next ei
+        gStage = "6/6 倒角（轴向 " & axial.ToString("F3") & " / 端面 " & face.ToString("F3") & _
+                 "，" & cnt.ToString() & " 条边）"
+
+        Dim nullFeat As Feature = Nothing
+        Dim cb As ChamferBuilder = Nothing
+        Dim sc As ScCollector = Nothing
+        Try
+            cb = wp.Features.CreateChamferBuilder(nullFeat)
+            If cb Is Nothing Then
+                gChamInfo = "倒角：CreateChamferBuilder 返回空，已跳过倒角。"
+                Return
+            End If
+
+            ' ---- 2) 边规则 + 收集器（官方 SelectionExample.vb 同款写法）----
+            Dim rul(0) As SelectionIntentRule
+            rul(0) = CType(wp, BasePart).ScRuleFactory.CreateRuleEdgeDumb(edges)
+            sc = wp.ScCollectors.CreateCollector()
+            sc.ReplaceRules(rul, False)
+
+            ' ---- 3) 非对称两侧偏置倒角 ----
+            cb.Option = ChamferBuilder.ChamferOption.TwoOffsets
+            cb.Method = ChamferBuilder.OffsetMethod.EdgesAlongFaces
+            cb.Tolerance = 0.0254
+            cb.ReverseOffsets = False
+            cb.FirstOffset = axial.ToString("F4")
+            cb.SecondOffset = face.ToString("F4")
+            cb.SmartCollector = sc
+
+            ' ---- 4) 提交 ----
             cb.CommitFeature()
+            gChamInfo = ""
+        Catch ex As Exception
+            gChamInfo = "倒角失败（零件其余部分已生成，未回退）：" & vbCrLf & BuildErrChain(ex)
+        End Try
+        Try
+            If cb IsNot Nothing Then
+                cb.Destroy()
+            End If
         Catch
         End Try
         Try
-            cb.Destroy()
+            If sc IsNot Nothing Then
+                sc.Destroy()
+            End If
         Catch
         End Try
     End Sub
+
+    ' 判断一条边是否属于"外缘齿廓"（倒角对象）：
+    '   ① 参考边（IsReference）不要
+    '   ② 两端点 z 相同 → 排除沿轴向的竖直棱边
+    '   ③ 两端点半径都大于齿根圆半径 → 排除各孔的内圈边
+    Function IsChamferEdge(ByVal e As Edge, ByVal minR As Double) As Boolean
+        Try
+            If e.IsReference Then
+                Return False
+            End If
+            Dim v1 As Point3d
+            Dim v2 As Point3d
+            e.GetVertices(v1, v2)
+            If Abs(v1.Z - v2.Z) > 0.001 Then
+                Return False
+            End If
+            Dim r1 As Double = Sqrt(v1.X * v1.X + v1.Y * v1.Y)
+            Dim r2 As Double = Sqrt(v2.X * v2.X + v2.Y * v2.Y)
+            If r1 < minR - 0.5 Or r2 < minR - 0.5 Then
+                Return False
+            End If
+            Return True
+        Catch
+            Return False
+        End Try
+    End Function
 
 End Module
 ' ================================================================
@@ -997,7 +1152,9 @@ Public Class SprocketPluginUI
     Private dbCskDiaBlk As UIBlock
     Private dbCskDepthBlk As UIBlock
     Private tgChamBlk As UIBlock
-    Private dbChamDBlk As UIBlock
+    ' v23：倒角由单一宽度改为两个长度——轴向 / 端面
+    Private dbChamAxBlk As UIBlock
+    Private dbChamFcBlk As UIBlock
 
     Public Sub New()
         theSession = Session.GetSession()
@@ -1073,7 +1230,8 @@ Public Class SprocketPluginUI
         dbCskDiaBlk = theDialog.TopBlock.FindBlock("dbCskDia")
         dbCskDepthBlk = theDialog.TopBlock.FindBlock("dbCskDepth")
         tgChamBlk = theDialog.TopBlock.FindBlock("tgCham")
-        dbChamDBlk = theDialog.TopBlock.FindBlock("dbChamD")
+        dbChamAxBlk = theDialog.TopBlock.FindBlock("dbChamAx")
+        dbChamFcBlk = theDialog.TopBlock.FindBlock("dbChamFc")
     End Sub
 
     Sub dialogShown_cb()
@@ -1136,7 +1294,15 @@ Public Class SprocketPluginUI
             Dim cskDia As Double = GetDblValue(dbCskDiaBlk)
             Dim cskDeep As Double = GetDblValue(dbCskDepthBlk)
             Dim doCham As Boolean = GetLogValue(tgChamBlk)
-            Dim chamD As Double = GetDblValue(dbChamDBlk)
+            ' v23：两侧倒角——轴向长度 + 端面长度（默认 1 x 5）
+            Dim chamAx As Double = GetDblValue(dbChamAxBlk)
+            Dim chamFc As Double = GetDblValue(dbChamFcBlk)
+            If chamAx < 0.05 Then
+                Throw New Exception("轴向倒角长度无效：须不小于 0.05 mm")
+            End If
+            If chamFc < 0.05 Then
+                Throw New Exception("端面倒角长度无效：须不小于 0.05 mm")
+            End If
 
             ' 0 值语义（与 v16 DoGenerate 完全一致）
             If Not doCenter Then
@@ -1149,13 +1315,16 @@ Public Class SprocketPluginUI
             If doCsk Then
                 cskMode = 1
             End If
-            ' v18 简化：倒角统一单宽度 chamD（DoSimpleChamfer 的 d2 传同值）
-            Dim cMethod As Integer = 0
-
+            ' v23：倒角参数改为轴向 / 端面两个长度
             DoGenerate(teeth, chainType, cP, cR, thick, centerDia, _
                        boltN, boltDia, boltPCD, doCham, _
-                       cMethod, chamD, chamD, 45.0, _
+                       chamAx, chamFc, _
                        cskMode, cskDia, cskDeep, 90.0, outerDia)
+
+            ' v23：倒角失败不中断生成（零件已做出），这里用信息框提示原因
+            If gChamInfo <> "" Then
+                theUI.NXMessageBox.Show("链轮生成器", NXMessageBox.DialogType.Information, gChamInfo)
+            End If
         Catch ex As Exception
             ' v20：报错框给出「失败阶段 + 截面探针 + 异常链 + 内层堆栈」。
             ' （v19b 的 ex.ToString() 只有两帧堆栈，根因是 DoGenerate 里 `Throw ex`
