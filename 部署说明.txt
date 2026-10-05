@@ -144,6 +144,7 @@ NX 启动时会在 $UGII_USER_DIR\startup\ 和 $UGII_USER_DIR\application\
      变成一长串 %XX 转义，建议用 ASCII 名，例如 NX-Sprocket-Plugin
    - 三个初始化选项（Add a README file / .gitignore / license）
      一个都不要勾 —— 勾了远端就会先有提交，首次推送会报 rejected
+     （若已经勾了也不要紧，见下面「常见问题 1」）
    - 建好后复制仓库地址，形如：
        https://github.com/<你的用户名>/NX-Sprocket-Plugin.git
 
@@ -174,10 +175,30 @@ NX 启动时会在 $UGII_USER_DIR\startup\ 和 $UGII_USER_DIR\application\
   - 不要往仓库里放 NX 安装包、许可证文件等大文件
 
 常见问题：
-  1. push 报 "rejected / fetch first"
-     远端仓库不是空的（建库时勾了 README）。执行下面任一方式：
-       git pull --rebase origin main      然后再 push
-       git push -u origin main --force    用本地覆盖远端
+  1. push 报 "rejected ... (fetch first)"
+     含义：远端分支上已有本地没有的提交 —— 建库时勾了
+     "Add a README file"，GitHub 就自动生成了 Initial commit；
+     也可能是别人往同一分支推过东西。两边历史各走各的，
+     git 不允许直接覆盖，必须先合并。
+
+     ★ 推荐做法：合并（远端已有的文件会保留下来）
+
+         git fetch origin
+         git merge origin/main --allow-unrelated-histories
+
+       若提示 README.md 冲突（两边都有这个文件），编辑它，删掉
+         <<<<<<<   =======   >>>>>>>   这些标记行，保留想要的内容，然后：
+
+         git add -A
+         git commit -m "合并远端初始提交"
+         git push -u origin main
+
+     ★ 省事做法：直接双击「推送到GitHub.bat」
+       该脚本会先 fetch + merge 再 push，上面两种情况都能自动处理。
+
+     ⚠ 不推荐 git push --force：会把远端已有的文件（例如 LICENSE、
+       别人写的 README）直接抹掉，而且无法从网页恢复。
+       只有当确认远端内容毫无价值时再用。
 
   2. push 报 CRYPT_E_NO_REVOCATION_CHECK 或
      "unable to get local issuer certificate"（证书类错误）
